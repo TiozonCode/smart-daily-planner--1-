@@ -4,7 +4,7 @@ import type { Request, Response } from "express";
 let app: any;
 
 try {
-  app = (await import("../server")).default;
+  app = (await import("./app")).default;
 } catch (err: any) {
   console.error("Failed to load Express app:", err);
 }
