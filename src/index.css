@@ -1,0 +1,189 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+@import "tailwindcss";
+
+:root {
+  --slate-950: #020617;
+  --slate-900: #0f172a;
+  --slate-850: #1b253b;
+  --slate-800: #1e293b;
+  --slate-700: #334155;
+  --slate-600: #475569;
+  --slate-500: #64748b;
+  --slate-400: #94a3b8;
+  --slate-300: #cbd5e1;
+  --slate-200: #e2e8f0;
+  --slate-100: #f1f5f9;
+  --slate-50: #f8fafc;
+  --theme-white: #ffffff;
+}
+
+:root.theme-discord-dark {
+  --slate-950: #313338;
+  --slate-900: #2b2d31;
+  --slate-850: #1e1f22;
+  --slate-800: #383a40;
+}
+
+:root.theme-discord-midnight {
+  --slate-950: #090a16;
+  --slate-900: #111224;
+  --slate-850: #15162a;
+  --slate-800: #23243a;
+}
+
+:root.theme-discord-forest {
+  --slate-950: #131b19;
+  --slate-900: #1a2421;
+  --slate-850: #101614;
+  --slate-800: #2a3b36;
+}
+
+:root.theme-discord-sunset {
+  --slate-950: #1e171d;
+  --slate-900: #251d24;
+  --slate-850: #1b141a;
+  --slate-800: #392b37;
+}
+
+:root.theme-discord-sakura {
+  --slate-950: #21161c;
+  --slate-900: #2b1e25;
+  --slate-850: #1c1218;
+  --slate-800: #422e39;
+}
+
+:root.theme-discord-sea {
+  --slate-950: #111522;
+  --slate-900: #161d2d;
+  --slate-850: #0f121d;
+  --slate-800: #25314a;
+}
+
+:root.theme-discord-crimson {
+  --slate-950: #1b1012;
+  --slate-900: #231518;
+  --slate-850: #150c0e;
+  --slate-800: #382126;
+}
+
+:root.light {
+  --slate-950: #f8fafc; /* Beautiful light layout page background */
+  --slate-900: #ffffff; /* Solid white card/sidebar bases */
+  --slate-850: #f1f5f9; /* Soft background inserts */
+  --slate-800: #e2e8f0; /* Perfect light-gray borders */
+  --slate-700: #cbd5e1; /* Subtle select/input elements */
+  --slate-600: #94a3b8; /* Muted texts */
+  --slate-500: #64748b; /* Medium-legible details */
+  --slate-400: #475569; /* Readably readable labels */
+  --slate-300: #1e293b; /* Strong slate for input text */
+  --slate-200: #0f172a; /* Ultra dark Slate for headers */
+  --slate-100: #0f172a; /* Main readable text, dark body text */
+  --slate-50: #0f172a;  /* Absolute crisp text */
+  --theme-white: #0f172a; /* Custom mapping so that text-white titles turn into slate-950 dark */
+}
+
+/* Base resets that support global transitions */
+html, body {
+  background-color: var(--slate-950);
+  color: var(--slate-100);
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Universal high-quality light mode style overrides for cards */
+:root.light .rounded-2xl.border-slate-800,
+:root.light .rounded-3xl.border-slate-800,
+:root.light .rounded-2xl.border-slate-900,
+:root.light .rounded-xl.border-slate-800,
+:root.light .border-slate-800 {
+  background-color: #ffffff !important;
+  border-color: #edf2f7 !important;
+  box-shadow: 0 4px 18px -2px rgba(15, 23, 42, 0.04), 0 2px 6px -1px rgba(15, 23, 42, 0.02) !important;
+}
+
+/* Soft inline insert styling overrides (e.g. lists, timeslots, calendar squares) */
+:root.light .bg-slate-950,
+:root.light .bg-slate-950\/60,
+:root.light .bg-slate-950\/80,
+:root.light .bg-slate-950\/40,
+:root.light .bg-slate-950\/20,
+:root.light .bg-slate-900\/40,
+:root.light .bg-slate-900\/30,
+:root.light .bg-slate-900\/10,
+:root.light .bg-slate-900\/15 {
+  background-color: #f1f5f9 !important;
+  color: #0f172a !important;
+}
+
+/* Restore nice high contrast input field look in light mode */
+:root.light input,
+:root.light select,
+:root.light textarea {
+  background-color: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+}
+
+/* Ensure placeholder texts are legible in light mode inputs */
+:root.light input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Override sidebars and main panel background explicitly for consistency */
+:root.light aside {
+  background-color: #ffffff !important;
+  border-right-color: #e2e8f0 !important;
+  box-shadow: 2px 0 12px rgba(15, 23, 42, 0.02) !important;
+}
+
+:root.light header {
+  background-color: #ffffff !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+:root.light select option {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+/* Fix specific components where dark backgrounds must stay dark (e.g., active elements with bright backgrounds) */
+:root.light .text-slate-900,
+:root.light .text-slate-950 {
+  color: #0f172a !important;
+}
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  
+  --color-slate-950: var(--slate-950);
+  --color-slate-900: var(--slate-900);
+  --color-slate-850: var(--slate-850);
+  --color-slate-800: var(--slate-800);
+  --color-slate-700: var(--slate-700);
+  --color-slate-600: var(--slate-600);
+  --color-slate-500: var(--slate-500);
+  --color-slate-400: var(--slate-400);
+  --color-slate-300: var(--slate-300);
+  --color-slate-200: var(--slate-200);
+  --color-slate-100: var(--slate-100);
+  --color-slate-50: var(--slate-50);
+  
+  --color-white: var(--theme-white);
+}
+
+/* Custom scrollbar for calendar logs list and notifications */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--slate-800);
+  border-radius: 99px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #14b8a6;
+}

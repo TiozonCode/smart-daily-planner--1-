@@ -1,0 +1,12 @@
+{
+  "name": "Smart Daily Planner",
+  "description": "An AI-powered daily planner web application featuring task prioritization, habit tracking, daily goals, unified calendar, reminders, and productivity analytics.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
