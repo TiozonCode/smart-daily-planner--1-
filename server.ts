@@ -1,3 +1,7 @@
+import dotenv from "dotenv";
+dotenv.config();
+dotenv.config({ path: ".env.local", override: true });
+
 import app from "./api/app";
 import path from "path";
 import express from "express";
@@ -29,4 +33,5 @@ async function runServer() {
 
 runServer().catch((e) => {
   console.error("Critical error while opening Express server:", e);
+  process.exit(1);
 });
