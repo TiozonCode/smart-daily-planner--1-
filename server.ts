@@ -2,7 +2,7 @@ import express from "express";
 import fs from "fs";
 import path from "path";
 import crypto from "crypto";
-import { GoogleGenAI, Type } from "@google/genai";
+import Groq from "groq-sdk";
 import dotenv from "dotenv";
 
 dotenv.config();
@@ -15,24 +15,19 @@ const DB_PATH = path.join(process.cwd(), "planner-db.json");
 app.use(express.json());
 
 // Initialize AI
-let ai: GoogleGenAI | null = null;
-const api_key = process.env.GEMINI_API_KEY;
+let ai: Groq | null = null;
+const api_key = process.env.GROQ_API_KEY;
 if (api_key) {
   try {
-    ai = new GoogleGenAI({
+    ai = new Groq({
       apiKey: api_key,
-      httpOptions: {
-        headers: {
-          'User-Agent': 'aistudio-build',
-        }
-      }
     });
-    console.log("Gemini client successfully initialized.");
+    console.log("Groq client successfully initialized.");
   } catch (e) {
-    console.error("Failed to initialize Gemini. AI features will fallback to deterministic generation.", e);
+    console.error("Failed to initialize Groq. AI features will fallback to deterministic generation.", e);
   }
 } else {
-  console.log("No GEMINI_API_KEY found in env. AI prioritzation will run on simulated scheduling algorithm.");
+  console.log("No GROQ_API_KEY found in env. AI prioritzation will run on simulated scheduling algorithm.");
 }
 
 import { readSQLiteDB, writeSQLiteDB } from "./src/db/sqlite";
@@ -719,38 +714,23 @@ app.post("/api/tasks/smart-sort", async (req, res) => {
 
   if (ai) {
     try {
-      console.log("Requesting Gemini Smart Sort for tasks list...");
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: promptText,
-        config: {
-          systemInstruction: "You are the advanced Smart task scheduler. Sort user's tasks to optimize productivity based on priority, urgency, and estimated duration. Return a highly logical JSON output matching the required schema.",
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              sortedIds: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "Array of task IDs in their exact recommended chronological order."
-              },
-              reasoning: {
-                type: Type.STRING,
-                description: "A short paragraph detailing the prioritization choice."
-              }
-            },
-            required: ["sortedIds", "reasoning"]
-          }
-        }
+      console.log("Requesting Groq Smart Sort for tasks list...");
+      const response = await ai.chat.completions.create({
+        model: "mixtral-8x7b-32768",
+        messages: [
+          { role: "system", content: "You are the advanced Smart task scheduler. Sort user's tasks to optimize productivity based on priority, urgency, and estimated duration. Return a highly logical JSON output with keys 'sortedIds' (array of task IDs) and 'reasoning' (string)." },
+          { role: "user", content: promptText }
+        ],
+        response_format: { type: "json_object" },
       });
 
-      const text = response.text;
+      const text = response.choices[0]?.message?.content;
       if (text) {
         const result = JSON.parse(text.trim());
         return res.json(result);
       }
     } catch (err) {
-      console.error("Gemini Smart Sort call failed. Falling back to rule-based scheduler:", err);
+      console.error("Groq Smart Sort call failed. Falling back to rule-based scheduler:", err);
     }
   }
 
@@ -1323,47 +1303,22 @@ app.post("/api/exercises/recommend", async (req, res) => {
 
   if (ai) {
     try {
-      console.log("Generating Gemini physical fitness prescription for:", userName);
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: promptText,
-        config: {
-          systemInstruction: "You are the advanced smart AI Physical Therapist & Athletic coach. Return a strict JSON response containing a workout that matches the current planner fatigue and cognitive stress parameters.",
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              workoutName: { type: Type.STRING },
-              category: { type: Type.STRING },
-              recommendedDuration: { type: Type.INTEGER },
-              intensity: { type: Type.STRING },
-              estimatedCalories: { type: Type.INTEGER },
-              exercisesList: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    name: { type: Type.STRING },
-                    sets: { type: Type.INTEGER },
-                    reps: { type: Type.INTEGER },
-                    notes: { type: Type.STRING }
-                  },
-                  required: ["name", "sets", "reps", "notes"]
-                }
-              },
-              coachingTips: { type: Type.STRING }
-            },
-            required: ["workoutName", "category", "recommendedDuration", "intensity", "estimatedCalories", "exercisesList", "coachingTips"]
-          }
-        }
+      console.log("Generating Groq physical fitness prescription for:", userName);
+      const response = await ai.chat.completions.create({
+        model: "mixtral-8x7b-32768",
+        messages: [
+          { role: "system", content: "You are the advanced smart AI Physical Therapist & Athletic coach. Return a strict JSON response containing a workout that matches the current planner fatigue and cognitive stress parameters." },
+          { role: "user", content: promptText }
+        ],
+        response_format: { type: "json_object" },
       });
 
-      const text = response.text;
+      const text = response.choices[0]?.message?.content;
       if (text) {
         return res.json(JSON.parse(text.trim()));
       }
     } catch (err) {
-      console.error("Gemini Workout Gen fell back to rule-engine", err);
+      console.error("Groq Workout Gen fell back to rule-engine", err);
     }
   }
 
@@ -1539,59 +1494,26 @@ app.post("/api/ai/prioritize", async (req, res) => {
 
   if (ai) {
     try {
-      console.log("Requesting Gemini Prioritization evaluation for user:", userName);
-      const response = await ai.models.generateContent({
-        model: "gemini-3.5-flash",
-        contents: promptText,
-        config: {
-          systemInstruction: "You are the advanced Smart Daily Planner Prioritization Assistant. Your job is to organize the user's workload into a beautifully prioritized roadmap. Output must be perfectly matching the requested schema. Ensure time blocks cover task estimated efforts precisely.",
-          responseMimeType: "application/json",
-          responseSchema: {
-            type: Type.OBJECT,
-            properties: {
-              recommendedOrder: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "Array of task titles in their exact recommended chronological order."
-              },
-              explanation: {
-                type: Type.STRING,
-                description: "Deep explanation summarizing the productivity psychology applied to prioritize this roadmap."
-              },
-              suggestedSchedule: {
-                type: Type.ARRAY,
-                items: {
-                  type: Type.OBJECT,
-                  properties: {
-                    time: { type: Type.STRING, description: "Clock slot, e.g. '09:00 - 09:45'" },
-                    taskTitle: { type: Type.STRING, description: "The task or habit heading" },
-                    reason: { type: Type.STRING, description: "Why this block is scheduled here" }
-                  },
-                  required: ["time", "taskTitle", "reason"]
-                },
-                description: "Hourly itinerary recomendations."
-              },
-              warnings: {
-                type: Type.ARRAY,
-                items: { type: Type.STRING },
-                description: "Highlighting overdue items, neglected streaks, and potential focus drainers."
-              }
-            },
-            required: ["recommendedOrder", "explanation", "suggestedSchedule", "warnings"]
-          }
-        }
+      console.log("Requesting Groq Prioritization evaluation for user:", userName);
+      const response = await ai.chat.completions.create({
+        model: "mixtral-8x7b-32768",
+        messages: [
+          { role: "system", content: "You are the advanced Smart Daily Planner Prioritization Assistant. Your job is to organize the user's workload into a beautifully prioritized roadmap. Output must be perfectly valid JSON with keys: 'recommendedOrder' (array of task titles), 'explanation' (string), 'suggestedSchedule' (array of {time, taskTitle, reason}), 'warnings' (array of strings), and 'generatedAt' (ISO string)." },
+          { role: "user", content: promptText }
+        ],
+        response_format: { type: "json_object" },
       });
 
-      const text = response.text;
+      const text = response.choices[0]?.message?.content;
       if (!text) {
-        throw new Error("Empty text returned from Gemini API");
+        throw new Error("Empty text returned from Groq API");
       }
 
       const result = JSON.parse(text.trim());
       result.generatedAt = new Date().toISOString();
       return res.json(result);
     } catch (err) {
-      console.error("Gemini invocation failed, rolling back to deterministic engine:", err);
+      console.error("Groq invocation failed, rolling back to deterministic engine:", err);
     }
   }
 
