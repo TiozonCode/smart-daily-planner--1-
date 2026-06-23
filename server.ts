@@ -31,7 +31,7 @@ if (api_key) {
   console.log("No GROQ_API_KEY found in env. AI prioritzation will run on simulated scheduling algorithm.");
 }
 
-import { readSQLiteDB, writeSQLiteDB } from "./src/db/sqlite";
+import { readSQLiteDB, writeSQLiteDB, initSQLite } from "./src/db/sqlite";
 
 // Helper: Read/Write Database
 interface DBStructure {
@@ -375,44 +375,53 @@ function seedUserData(userId: string, userEmail: string, db: DBStructure) {
 }
 
 // Initialize database with default seed user
-const initialDB = readDB();
-const defaultEmail = "janetiozon1@gmail.com";
+let dbInitialized = false;
+(async () => {
+  try {
+    await initSQLite();
 
-// Migrate any existing users with name "Janet Iozon" or matching the defaultEmail to "Shinderu"
-let dbModified = false;
-Object.keys(initialDB.users).forEach((id) => {
-  if (
-    initialDB.users[id].name === "Janet Iozon" ||
-    initialDB.users[id].email.toLowerCase() === defaultEmail.toLowerCase()
-  ) {
-    if (initialDB.users[id].name !== "Shinderu") {
-      initialDB.users[id].name = "Shinderu";
-      dbModified = true;
+    const initialDB = readSQLiteDB();
+    const defaultEmail = "janetiozon1@gmail.com";
+
+    let dbModified = false;
+    Object.keys(initialDB.users).forEach((id) => {
+      if (
+        initialDB.users[id].name === "Janet Iozon" ||
+        initialDB.users[id].email.toLowerCase() === defaultEmail.toLowerCase()
+      ) {
+        if (initialDB.users[id].name !== "Shinderu") {
+          initialDB.users[id].name = "Shinderu";
+          dbModified = true;
+        }
+      }
+    });
+
+    const defaultUserHash = Object.keys(initialDB.users).find(
+      (id) => initialDB.users[id].email.toLowerCase() === defaultEmail.toLowerCase()
+    );
+
+    if (!defaultUserHash) {
+      const seedId = crypto.randomUUID();
+      initialDB.users[seedId] = {
+        id: seedId,
+        email: defaultEmail,
+        name: "Shinderu",
+        passwordHash: hashPassword("password"),
+        productivityScore: 78,
+        joinedAt: new Date().toISOString(),
+      };
+      seedUserData(seedId, defaultEmail, initialDB);
+      writeSQLiteDB(initialDB);
+      console.log("Seeded database with default user:", defaultEmail);
+    } else if (dbModified) {
+      writeSQLiteDB(initialDB);
+      console.log("Migrated existing default user to named 'Shinderu'");
     }
+    dbInitialized = true;
+  } catch (err) {
+    console.error("Database initialization failed (will initialize on first request):", err);
   }
-});
-
-const defaultUserHash = Object.keys(initialDB.users).find(
-  (id) => initialDB.users[id].email.toLowerCase() === defaultEmail.toLowerCase()
-);
-
-if (!defaultUserHash) {
-  const seedId = crypto.randomUUID();
-  initialDB.users[seedId] = {
-    id: seedId,
-    email: defaultEmail,
-    name: "Shinderu",
-    passwordHash: hashPassword("password"),
-    productivityScore: 78,
-    joinedAt: new Date().toISOString(),
-  };
-  seedUserData(seedId, defaultEmail, initialDB);
-  writeDB(initialDB);
-  console.log("Seeded database with default user:", defaultEmail);
-} else if (dbModified) {
-  writeDB(initialDB);
-  console.log("Migrated existing default user to named 'Shinderu'");
-}
+})();
 
 // --- AUTHENTICATION API ---
 app.post("/api/auth/register", (req, res) => {

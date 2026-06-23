@@ -18,14 +18,18 @@ interface DBStructure {
 let useSQLite = false;
 let betterSQLite3: any = null;
 
-if (!isVercel) {
+export async function initSQLite(): Promise<boolean> {
+  if (useSQLite) return true;
+  if (isVercel) return false;
   try {
     const mod = await import("better-sqlite3");
     betterSQLite3 = mod.default || mod;
     useSQLite = true;
+    return true;
   } catch (e) {
     console.log("better-sqlite3 not available, falling back to JSON file storage.");
     useSQLite = false;
+    return false;
   }
 }
 
