@@ -33,7 +33,9 @@ export async function initSQLite(): Promise<boolean> {
   }
 }
 
-const DB_PATH = path.join(process.cwd(), "planner-db.json");
+const DB_PATH = isVercel
+  ? path.join("/tmp", "planner-db.json")
+  : path.join(process.cwd(), "planner-db.json");
 
 let dbInstance: any = null;
 
